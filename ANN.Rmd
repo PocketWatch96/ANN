@@ -1,0 +1,136 @@
+---
+title: "ANN"
+output: pdf_document
+date: "2024-07-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installing required packages
+
+Here, I am installing the necessary packages and loading them.
+
+```{r}
+install.packages(c('neuralnet', 'kera','tensorflow'), dependencies = T)
+install.packages("tidyverse")
+library(neuralnet)
+library(tidyverse)
+```
+
+## Data and processing
+
+Here we get the data set for the model. We are converting the iris data set column into a factor. This is important for the neural network.
+
+```{r}
+iris<-iris%>%mutate_if(is.character, as.factor)
+iris_sample <- iris[sample(nrow(iris), 10), ]
+summary(iris)
+```
+
+## Splitting the data
+
+Now we split the data into training and testing.
+We will calculate the the number of rows that represent 80% of the dataset. Then randomly select the indices that will be used for training. Then, split the data.
+
+Finally, we print the head for the test and train datasets.
+
+```{r}
+set.seed(254)
+data_rows<-floor(0.80*nrow(iris))
+data_rows
+
+train_indices<-sample(c(1:nrow(iris)), data_rows)
+train_indices
+
+train_data<-iris[train_indices, ]
+head(train_data)
+
+test_data<-iris[-train_indices, ]
+head(test_data)
+```
+
+## ANN model
+
+Now we create a neural network model that will predict the species based on the features in the dataset.
+
+Once we create the model, we then plot it
+
+```{r}
+model<-neuralnet(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data = train_data, hidden = c(4), linear.output = FALSE)
+plot(model, rep='best')
+```
+
+## Evaluation
+
+Now that the model has been created, we need to test and evaluate it, and see the accuracy
+
+```{r}
+pred<-predict(model, test_data)
+pred
+labels<-c("setosa", "versicolor", "virginica")
+labels
+prediction_label <- data.frame(max.col(pred)) %>% mutate(pred=labels[max.col.pred.]) %>% select(2) %>% unlist()
+table(test_data$Species, prediction_label)
+
+check = as.numeric(test_data$Species) == max.col(pred)
+accuracy = (sum(check)/nrow(test_data))*100
+print(accuracy)
+```
+
+## Layers
+
+Now to see the effect the layers have. Currently, the model has one hidden layer with 4 neurons. But let's see different layers and how if affects the accuracy.
+
+```{r}
+model<-neuralnet(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data = train_data, hidden = c(2, 4), linear.output = FALSE)
+plot(model, rep='best')
+
+pred<-predict(model, test_data)
+labels<-c("setosa", "versicolor", "virginica")
+prediction_label <- data.frame(max.col(pred)) %>% mutate(pred=labels[max.col.pred.]) %>% select(2) %>% unlist()
+table(test_data$Species, prediction_label)
+
+check = as.numeric(test_data$Species) == max.col(pred)
+accuracy = (sum(check)/nrow(test_data))*100
+print(accuracy)
+```
+
+The above neural network has two hidden layers, with 2 and 4 neurons respectively
+
+```{r}
+model<-neuralnet(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data = train_data, hidden = c(2, 4, 4), linear.output = FALSE)
+plot(model, rep='best')
+
+pred<-predict(model, test_data)
+labels<-c("setosa", "versicolor", "virginica")
+prediction_label <- data.frame(max.col(pred)) %>% mutate(pred=labels[max.col.pred.]) %>% select(2) %>% unlist()
+table(test_data$Species, prediction_label)
+
+check = as.numeric(test_data$Species) == max.col(pred)
+accuracy = (sum(check)/nrow(test_data))*100
+print(accuracy)
+```
+
+The above neural network has three hidden layers, with 2, 4 and 4 neurons respectively
+
+```{r}
+model<-neuralnet(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data = train_data, hidden = c(2, 4, 4, 5), linear.output = FALSE)
+plot(model, rep='best')
+
+pred<-predict(model, test_data)
+labels<-c("setosa", "versicolor", "virginica")
+prediction_label <- data.frame(max.col(pred)) %>% mutate(pred=labels[max.col.pred.]) %>% select(2) %>% unlist()
+table(test_data$Species, prediction_label)
+
+check = as.numeric(test_data$Species) == max.col(pred)
+accuracy = (sum(check)/nrow(test_data))*100
+print(accuracy)
+```
+
+The above neural network has three hidden layers, with 2, 4, 4 and 5 neurons respectively
+
+## Conclusion
+
+Increasing the layers increases the accuracy for sure, but it also is unnecessary with this dataset. It is not that complex.
